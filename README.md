@@ -19,6 +19,7 @@ automatically. There is never a numeral to maintain by hand.
 - Define affiliations once, keyed by a short code (e.g. `HMS`), in any order.
 - Numbers assigned by first citation; the printed list follows the same order.
 - Footnote symbols (`*`, `\dagger`, `\ddagger`, …) handled per author.
+- Optional ORCID iD per author, rendered with `\orcidlink` (the `orcidlink` package is loaded for you).
 - Per-author numbers shown ascending by default (`1,5,30`); citation order optional.
 - Build warnings for codes cited-but-undefined and defined-but-uncited.
 - Layout-agnostic: drop the print commands into any journal class's `\author{}`.
@@ -37,6 +38,16 @@ then load it:
 On Overleaf, upload `authaffil.sty` into your project. It works with pdfLaTeX,
 XeLaTeX, and LuaLaTeX.
 
+`authaffil` loads the [`orcidlink`](https://ctan.org/pkg/orcidlink) package for
+you, so the optional ORCID iD argument of `\AddAuthor` works out of the box.
+Because `orcidlink` pulls in `hyperref`, load `hyperref` yourself *before*
+`authaffil` if you need particular options such as `hidelinks`:
+
+```latex
+\usepackage[hidelinks]{hyperref}  % optional; load before authaffil if you need options
+\usepackage{authaffil}            % loads orcidlink (and thus hyperref/tikz) for you
+```
+
 ## Quick start
 
 ```latex
@@ -45,10 +56,10 @@ XeLaTeX, and LuaLaTeX.
 \DefineAffiliation{OXE}{Dept. of Engineering Science, University of Oxford, UK}
 \DefineAffiliation{ETH}{Dept. of Computer Science, ETH Zurich, Switzerland}
 
-% 2. List authors, tagging each with codes (+ optional footnote symbols).
-\AddAuthor{Ayush~Noori}{HMS,OXE}
+% 2. List authors, tagging codes (+ optional footnote symbols and ORCID iDs).
+\AddAuthor[][0000-0003-1420-1236]{Ayush~Noori}{HMS,OXE}
 \AddAuthor[*]{Manuel~Burger}{ETH}
-\AddAuthor[\dagger,\ddagger]{Marinka~Zitnik}{HMS}
+\AddAuthor[\dagger,\ddagger][0000-0001-8530-7228]{Marinka~Zitnik}{HMS}
 
 % 3. (Optional) legend lines.
 \AddAffilNote{*}{Equal contribution.}
@@ -62,15 +73,16 @@ XeLaTeX, and LuaLaTeX.
 \end{center}}}
 ```
 
-This renders Noori as `1,2`, Burger as `3,*`, Zitnik as `1,†,‡`, followed by the
-three affiliations numbered `1`–`3` and the two legend lines.
+This renders Noori as `1,2` (with an ORCID icon), Burger as `3,*`, Zitnik as
+`1,†,‡` (with an ORCID icon), followed by the three affiliations numbered `1`–`3`
+and the two legend lines.
 
 ## Command reference
 
 | Command | Purpose |
 | --- | --- |
 | `\DefineAffiliation{CODE}{address}` | Register one affiliation. `CODE` is any short string; `address` may contain `\\` for forced line breaks. Call once per affiliation, in any order. |
-| `\AddAuthor[symbols]{Name}{CODE,CODE,…}` | Append one author. Each new code gets the next number on first sight. Optional `symbols` (e.g. `*`, `\dagger`) are appended after the numbers; write them pre-separated, e.g. `[\dagger,\ddagger]`. Use `~` in names to prevent line breaks. |
+| `\AddAuthor[symbols][orcid]{Name}{CODE,CODE,…}` | Append one author. Each new code gets the next number on first sight. Optional `symbols` (e.g. `*`, `\dagger`) are appended after the numbers; write them pre-separated, e.g. `[\dagger,\ddagger]`. Optional `orcid` appends `\orcidlink{orcid}` after the superscript (`orcidlink` is loaded for you); to give an ORCID without symbols, leave the first bracket empty, e.g. `[][0000-0003-1420-1236]`. Use `~` in names to prevent line breaks. |
 | `\AddAffilNote{symbol}{text}` | Register one legend line, typeset as a superscript symbol followed by text. Lines print in the order added. |
 | `\PrintAuthors` | Typeset the author names, comma-separated, each with its computed superscript. Sets no font size — wrap it yourself. |
 | `\PrintAffiliations` | Typeset the numbered affiliation list, one per line, in first-appearance order. Switches to `\footnotesize`. |

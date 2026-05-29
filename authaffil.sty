@@ -1,7 +1,7 @@
 %% authaffil.sty
 %% =========================================================================
 %%  authaffil --- first-appearance numbering of author affiliations
-%%  Version 1.1  (2026/05/29)
+%%  Version 1.2  (2026/05/29)
 %%
 %%  Author : Ayush Noori
 %%  License : LaTeX Project Public License (LPPL) 1.3c or later
@@ -24,9 +24,9 @@
 %%    \DefineAffiliation{HMS}{Dept. of Biomedical Informatics, HMS, Boston, MA, USA}
 %%    \DefineAffiliation{OXE}{Dept. of Engineering Science, Oxford, UK}
 %%
-%%    % 2. List authors, tagging codes (+ optional footnote symbols).
-%%    \AddAuthor{Ayush~Noori}{HMS,OXE}
-%%    \AddAuthor[\dagger,\ddagger]{Marinka~Zitnik}{HMS}
+%%    % 2. List authors, tagging codes (+ optional footnote symbols, ORCID iD).
+%%    \AddAuthor[][0000-0003-1420-1236]{Ayush~Noori}{HMS,OXE}
+%%    \AddAuthor[\dagger,\ddagger][0000-0001-8530-7228]{Marinka~Zitnik}{HMS}
 %%
 %%    % 3. Optional legend lines.
 %%    \AddAffilNote{\dagger}{These authors jointly supervised this work.}
@@ -45,13 +45,18 @@
 %%        are convenient but not required). The address may contain \\ for
 %%        forced line breaks. Call this for every affiliation, in any order.
 %%
-%%    \AddAuthor[<symbols>]{Name}{CODE,CODE,...}
-%%        Append one author. The third argument is a comma-separated list of
+%%    \AddAuthor[<symbols>][<orcid>]{Name}{CODE,CODE,...}
+%%        Append one author. The last argument is a comma-separated list of
 %%        affiliation codes; each new code is assigned the next number the
-%%        first time it is seen. The optional first argument is extra
+%%        first time it is seen. The first optional argument is extra
 %%        superscript material (footnote symbols such as * \dagger \ddagger),
-%%        appended after the numbers. Use ~ in names to keep them unbroken.
-%%        Example: \AddAuthor[\dagger,\ddagger]{Isaac~S.~Kohane}{HMS,BER,CHI}
+%%        appended after the numbers. The second optional argument is an ORCID
+%%        iD; when given, ~\orcidlink{<orcid>} is appended after the
+%%        superscript (orcidlink is loaded automatically). To supply
+%%        an ORCID without symbols, leave the first bracket empty:
+%%        \AddAuthor[][0000-0003-1420-1236]{Ayush~Noori}{HMS}. Use ~ in names
+%%        to keep them unbroken.
+%%        Example: \AddAuthor[\dagger][0000-0001-8530-7228]{Marinka~Zitnik}{HMS}
 %%
 %%    \AddAffilNote{<symbol>}{text}
 %%        Register one legend line, typeset as $^{<symbol>}$text. Lines are
@@ -95,18 +100,25 @@
 %%  REQUIREMENTS
 %%  ------------
 %%  LaTeX2e with the expl3 programming layer (part of every modern TeX
-%%  distribution). No other dependencies. Compatible with pdfLaTeX, XeLaTeX,
-%%  and LuaLaTeX. If a legend uses \href, load hyperref yourself.
+%%  distribution) and the orcidlink package, which authaffil loads for you so
+%%  the ORCID argument of \AddAuthor works out of the box. orcidlink itself
+%%  pulls in hyperref and tikz. Compatible with pdfLaTeX, XeLaTeX, and
+%%  LuaLaTeX. Because orcidlink loads hyperref, if you need hyperref with
+%%  particular options (e.g. hidelinks) -- or a legend uses \href -- load
+%%  hyperref BEFORE authaffil so that your options take effect.
 %%
 %%  CHANGELOG
 %%  ---------
+%%  v1.2  Add optional ORCID iD argument to \AddAuthor (appends \orcidlink);
+%%        load the orcidlink package as a dependency.
 %%  v1.1  Add unused-affiliation warning; expand documentation.
 %%  v1.0  Initial release.
 %% =========================================================================
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{authaffil}[2026/05/29 v1.1 First-appearance affiliation numbering]
+\ProvidesPackage{authaffil}[2026/05/29 v1.2 First-appearance affiliation numbering]
 
 \RequirePackage{expl3}
+\RequirePackage{orcidlink}   % \orcidlink for the ORCID argument of \AddAuthor
 
 % ---- option: per-author sorting of the affiliation numbers ---------------
 \ExplSyntaxOn
@@ -183,12 +195,20 @@
       }
   }
 
-% ---- \AddAuthor[symbols]{Name}{codes} ------------------------------------
-\NewDocumentCommand \AddAuthor { O{} m m }
+% ---- \AddAuthor[symbols][orcid]{Name}{codes} -----------------------------
+% #1 = footnote symbols, #2 = ORCID iD, #3 = name, #4 = affiliation codes.
+\tl_new:N \l_aa_orcid_tl
+\NewDocumentCommand \AddAuthor { O{} O{} m m }
   {
-    \aa_build_super:nn {#3} {#1}
+    \aa_build_super:nn {#4} {#1}
+    \tl_clear:N \l_aa_orcid_tl
+    \tl_if_blank:nF {#2}
+      { \tl_set:Nn \l_aa_orcid_tl { \nobreakspace \orcidlink {#2} } }
     \seq_gput_right:Nx \g_aa_authors_seq
-      { \exp_not:n {#2} $^{ \exp_not:V \l_aa_super_tl }$ }
+      {
+        \exp_not:n {#3} $^{ \exp_not:V \l_aa_super_tl }$
+        \exp_not:V \l_aa_orcid_tl
+      }
   }
 
 % ---- \AddAffilNote{symbol}{text} -----------------------------------------

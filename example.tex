@@ -1,0 +1,64 @@
+% example.tex
+% =========================================================================
+%  A complete, multi-author worked example for the authaffil package.
+%
+%  Build:
+%    pdflatex example.tex
+%    pdflatex example.tex      % a second pass settles the affiliation list
+%
+%  This example uses the optional ORCID argument of \AddAuthor. The orcidlink
+%  package (which renders the ORCID icon) is loaded automatically by authaffil,
+%  so you do not load it yourself. To omit an author's ORCID, just leave out
+%  the second bracket of that \AddAuthor call.
+% =========================================================================
+\documentclass[11pt]{article}
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[hidelinks]{hyperref}  % load hyperref (with options) BEFORE authaffil
+\usepackage{authaffil}          % auto-loads orcidlink for the ORCID argument
+
+% --- 1. Define each affiliation once, keyed by a short code (any order). ---
+\DefineAffiliation{HMS}{Department of Biomedical Informatics, Harvard Medical School, Boston, MA, USA}
+\DefineAffiliation{MIT}{Computer Science and Artificial Intelligence Laboratory, MIT, Cambridge, MA, USA}
+\DefineAffiliation{BWH}{Division of Genetics, Brigham and Women's Hospital, Boston, MA, USA}
+\DefineAffiliation{ETH}{Department of Computer Science, ETH Zurich, Switzerland}
+\DefineAffiliation{OXE}{Department of Engineering Science, University of Oxford, UK}
+
+% --- 2. List authors. Both optional arguments [symbols][orcid] may be used. -
+%     * Numbers are assigned in the order codes are FIRST cited, so here:
+%         HMS=1, MIT=2 (Noori), ETH=3 (Burger), BWH=4 (Queen), OXE=5 (Zitnik).
+%     * To give an ORCID with NO footnote symbol, leave the first bracket
+%       empty, e.g. \AddAuthor[][0000-0003-1420-1236]{...}{...}.
+\AddAuthor[*][0000-0003-1420-1236]{Ayush~Noori}{HMS,MIT}
+\AddAuthor[*]{Manuel~Burger}{ETH}
+\AddAuthor{Owen~Queen}{HMS,BWH}
+\AddAuthor[\dagger][0000-0001-8530-7228]{Marinka~Zitnik}{HMS,BWH,OXE}
+
+% --- 3. Optional legend lines, printed in the order added. -----------------
+\AddAffilNote{*}{These authors contributed equally.}
+\AddAffilNote{\dagger}{Corresponding author: \href{mailto:marinka@example.edu}{marinka@example.edu}.}
+
+\begin{document}
+
+% --- 4. Drop the print commands into whatever title scaffold you use. ------
+\title{\textbf{A Worked Example for the \texttt{authaffil} Package}}
+\author{{\small\begin{center}
+    \PrintAuthors      \\[2mm]
+    \PrintAffiliations \\[1mm]
+    \PrintAffilNotes
+\end{center}}}
+\date{\today}
+\maketitle
+\thispagestyle{empty}
+
+\section*{What to try}
+Add, remove, or reorder the \texttt{\textbackslash AddAuthor} lines above and
+recompile: every affiliation number and the affiliation list update
+automatically, with no numeral to maintain by hand. The ORCID icons link to
+each author's public ORCID record.
+
+To omit an author's ORCID iD, just leave out the second bracket of that
+\texttt{\textbackslash AddAuthor} call. The \texttt{orcidlink} package is
+loaded by \texttt{authaffil} automatically, so there is nothing else to add.
+
+\end{document}

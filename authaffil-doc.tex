@@ -4,8 +4,8 @@
 \usepackage{xcolor}
 \usepackage{listings}
 \usepackage{enumitem}
-\usepackage[hidelinks]{hyperref}
-\usepackage{authaffil}   % the package being documented (used live below)
+\usepackage[hidelinks]{hyperref}  % load hyperref (with options) BEFORE authaffil
+\usepackage{authaffil}   % auto-loads orcidlink; used live below
 
 % --- code listing style ---------------------------------------------------
 \definecolor{codebg}{gray}{0.96}
@@ -29,7 +29,7 @@
 \title{\textbf{The \texttt{authaffil} package}\\[2pt]
   \large First-appearance numbering of author affiliations}
 \author{Ayush Noori}
-\date{Version 1.1 \,\textperiodcentered\, 2026/05/29}
+\date{Version 1.2 \,\textperiodcentered\, 2026/05/29}
 
 \begin{document}
 \maketitle
@@ -50,8 +50,13 @@ your \TeX\ path) and load it:
 \usepackage{authaffil}            % default: per-author numbers sorted ascending
 \usepackage[nosort]{authaffil}    % per-author numbers in citation order
 \end{lstlisting}
-It requires only \texttt{expl3} (present in every modern \TeX\ distribution)
-and works with pdf\LaTeX, Xe\LaTeX, and Lua\LaTeX.
+It needs \texttt{expl3} (present in every modern \TeX\ distribution) and the
+\texttt{orcidlink} package, which \texttt{authaffil} loads for you so the
+\meta{orcid} argument of \cs{AddAuthor} (\S\ref{sec:cmdref}) works out of the
+box. It works with pdf\LaTeX, Xe\LaTeX, and Lua\LaTeX. Because
+\texttt{orcidlink} pulls in \texttt{hyperref}, load \texttt{hyperref} yourself
+\emph{before} \texttt{authaffil} if you need particular options such as
+\texttt{hidelinks} (as this manual does).
 
 \section{Quick start}
 \begin{lstlisting}
@@ -60,10 +65,10 @@ and works with pdf\LaTeX, Xe\LaTeX, and Lua\LaTeX.
 \DefineAffiliation{OXE}{Dept. of Engineering Science, University of Oxford, UK}
 \DefineAffiliation{ETH}{Dept. of Computer Science, ETH Zurich, Switzerland}
 
-% 2. List authors, tagging each with codes (+ optional footnote symbols).
-\AddAuthor{Ayush~Noori}{HMS,OXE}
+% 2. List authors, tagging each with codes (+ optional symbols and ORCID iDs).
+\AddAuthor[][0000-0003-1420-1236]{Ayush~Noori}{HMS,OXE}
 \AddAuthor[*]{Manuel~Burger}{ETH}
-\AddAuthor[\dagger,\ddagger]{Marinka~Zitnik}{HMS}
+\AddAuthor[\dagger,\ddagger][0000-0001-8530-7228]{Marinka~Zitnik}{HMS}
 
 % 3. (Optional) legend lines.
 \AddAffilNote{*}{Equal contribution.}
@@ -83,9 +88,9 @@ and works with pdf\LaTeX, Xe\LaTeX, and Lua\LaTeX.
 \DefineAffiliation{HMS}{Dept. of Biomedical Informatics, HMS, Boston, MA, USA}
 \DefineAffiliation{OXE}{Dept. of Engineering Science, University of Oxford, UK}
 \DefineAffiliation{ETH}{Dept. of Computer Science, ETH Zurich, Switzerland}
-\AddAuthor{Ayush~Noori}{HMS,OXE}
+\AddAuthor[][0000-0003-1420-1236]{Ayush~Noori}{HMS,OXE}
 \AddAuthor[*]{Manuel~Burger}{ETH}
-\AddAuthor[\dagger,\ddagger]{Marinka~Zitnik}{HMS}
+\AddAuthor[\dagger,\ddagger][0000-0001-8530-7228]{Marinka~Zitnik}{HMS}
 \AddAffilNote{*}{Equal contribution.}
 \AddAffilNote{\dagger}{Jointly supervised this work.}
 
@@ -95,20 +100,25 @@ and works with pdf\LaTeX, Xe\LaTeX, and Lua\LaTeX.
   \PrintAffilNotes
 }}\end{center}
 
-\section{Command reference}
+\section{Command reference}\label{sec:cmdref}
 
 \paragraph{\cs{DefineAffiliation}\texttt{\{}\meta{code}\texttt{\}\{}\meta{address}\texttt{\}}}
 Register one affiliation. \meta{code} is any short string---three-letter codes
 are convenient but not required. \meta{address} may contain \cs{\textbackslash}
 for forced line breaks. Call once per affiliation, in any order.
 
-\paragraph{\cs{AddAuthor}\texttt{[}\meta{symbols}\texttt{]\{}\meta{name}\texttt{\}\{}\meta{codes}\texttt{\}}}
+\paragraph{\cs{AddAuthor}\texttt{[}\meta{symbols}\texttt{][}\meta{orcid}\texttt{]\{}\meta{name}\texttt{\}\{}\meta{codes}\texttt{\}}}
 Append one author. \meta{codes} is a comma-separated list of affiliation codes;
-each new code receives the next number the first time it is seen. The optional
-\meta{symbols} argument is extra superscript material (e.g.\ \texttt{*},
-\cs{dagger}, \cs{ddagger}) appended after the numbers---write it pre-separated
-the way you want it to read, e.g.\ \texttt{[\cs{dagger},\cs{ddagger}]}. Use
-\texttt{\textasciitilde} inside names to keep them from breaking across lines.
+each new code receives the next number the first time it is seen. The first
+optional argument, \meta{symbols}, is extra superscript material (e.g.\
+\texttt{*}, \cs{dagger}, \cs{ddagger}) appended after the numbers---write it
+pre-separated the way you want it to read, e.g.\ \texttt{[\cs{dagger},\cs{ddagger}]}.
+The second optional argument, \meta{orcid}, is an ORCID iD; when supplied,
+\cs{orcidlink}\texttt{\{}\meta{orcid}\texttt{\}} is appended after the
+superscript (\texttt{authaffil} loads \texttt{orcidlink} automatically). To
+give an ORCID without symbols, leave the first bracket empty, e.g.\
+\texttt{[][0000-0003-1420-1236]}. Use \texttt{\textasciitilde} inside names to
+keep them from breaking across lines.
 
 \paragraph{\cs{AddAffilNote}\texttt{\{}\meta{symbol}\texttt{\}\{}\meta{text}\texttt{\}}}
 Register one legend line, typeset as \textsuperscript{\meta{symbol}}\meta{text}. Lines print
