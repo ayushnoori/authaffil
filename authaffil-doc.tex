@@ -1,0 +1,169 @@
+\documentclass[11pt]{article}
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{authaffil}   % the package being documented (used live below)
+
+% --- code listing style ---------------------------------------------------
+\definecolor{codebg}{gray}{0.96}
+\definecolor{codekw}{RGB}{30,80,160}
+\lstdefinestyle{tex}{
+  basicstyle=\ttfamily\small,
+  backgroundcolor=\color{codebg},
+  frame=single, framesep=6pt, rulecolor=\color{gray!40},
+  breaklines=true, columns=fullflexible, keepspaces=true,
+  xleftmargin=2pt, xrightmargin=2pt,
+  language=[LaTeX]TeX,
+  keywordstyle=\color{codekw},
+  morekeywords={DefineAffiliation,AddAuthor,AddAffilNote,PrintAuthors,
+    PrintAffiliations,PrintAffilNotes,usepackage},
+  moredelim=[is][\color{codekw}\bfseries]{|}{|}
+}
+\lstset{style=tex}
+\newcommand{\cs}[1]{\texttt{\textbackslash #1}}
+\newcommand{\meta}[1]{$\langle$\textit{#1}$\rangle$}
+
+\title{\textbf{The \texttt{authaffil} package}\\[2pt]
+  \large First-appearance numbering of author affiliations}
+\author{Ayush Noori}
+\date{Version 1.1 \,\textperiodcentered\, 2026/05/29}
+
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+
+\begin{abstract}
+\noindent\texttt{authaffil} removes hand-numbered affiliation superscripts from
+multi-author papers. You define each affiliation once under a short code, tag
+each author with codes, and the package assigns and prints the numbers in the
+order the codes are \emph{first cited}. Adding, removing, or reordering authors
+renumbers everything automatically.
+\end{abstract}
+
+\section{Installation}
+Place \texttt{authaffil.sty} next to your \texttt{.tex} file (or anywhere on
+your \TeX\ path) and load it:
+\begin{lstlisting}
+\usepackage{authaffil}            % default: per-author numbers sorted ascending
+\usepackage[nosort]{authaffil}    % per-author numbers in citation order
+\end{lstlisting}
+It requires only \texttt{expl3} (present in every modern \TeX\ distribution)
+and works with pdf\LaTeX, Xe\LaTeX, and Lua\LaTeX.
+
+\section{Quick start}
+\begin{lstlisting}
+% 1. Define affiliations (the order of these lines is irrelevant).
+\DefineAffiliation{HMS}{Dept. of Biomedical Informatics, HMS, Boston, MA, USA}
+\DefineAffiliation{OXE}{Dept. of Engineering Science, University of Oxford, UK}
+\DefineAffiliation{ETH}{Dept. of Computer Science, ETH Zurich, Switzerland}
+
+% 2. List authors, tagging each with codes (+ optional footnote symbols).
+\AddAuthor{Ayush~Noori}{HMS,OXE}
+\AddAuthor[*]{Manuel~Burger}{ETH}
+\AddAuthor[\dagger,\ddagger]{Marinka~Zitnik}{HMS}
+
+% 3. (Optional) legend lines.
+\AddAffilNote{*}{Equal contribution.}
+\AddAffilNote{\dagger}{Jointly supervised this work.}
+
+% 4. Typeset -- e.g. inside \author{...} of your template.
+\author{{\small\begin{center}
+    \PrintAuthors      \\[2mm]
+    \PrintAffiliations \\[1mm]
+    \PrintAffilNotes
+\end{center}}}
+\end{lstlisting}
+
+\noindent The block above renders as:
+
+% --- executed setup matching the listing above, so the demo renders ---
+\DefineAffiliation{HMS}{Dept. of Biomedical Informatics, HMS, Boston, MA, USA}
+\DefineAffiliation{OXE}{Dept. of Engineering Science, University of Oxford, UK}
+\DefineAffiliation{ETH}{Dept. of Computer Science, ETH Zurich, Switzerland}
+\AddAuthor{Ayush~Noori}{HMS,OXE}
+\AddAuthor[*]{Manuel~Burger}{ETH}
+\AddAuthor[\dagger,\ddagger]{Marinka~Zitnik}{HMS}
+\AddAffilNote{*}{Equal contribution.}
+\AddAffilNote{\dagger}{Jointly supervised this work.}
+
+\begin{center}\fbox{\parbox{0.92\textwidth}{\centering
+  \PrintAuthors \\[2mm]
+  \PrintAffiliations \\[1mm]
+  \PrintAffilNotes
+}}\end{center}
+
+\section{Command reference}
+
+\paragraph{\cs{DefineAffiliation}\texttt{\{}\meta{code}\texttt{\}\{}\meta{address}\texttt{\}}}
+Register one affiliation. \meta{code} is any short string---three-letter codes
+are convenient but not required. \meta{address} may contain \cs{\textbackslash}
+for forced line breaks. Call once per affiliation, in any order.
+
+\paragraph{\cs{AddAuthor}\texttt{[}\meta{symbols}\texttt{]\{}\meta{name}\texttt{\}\{}\meta{codes}\texttt{\}}}
+Append one author. \meta{codes} is a comma-separated list of affiliation codes;
+each new code receives the next number the first time it is seen. The optional
+\meta{symbols} argument is extra superscript material (e.g.\ \texttt{*},
+\cs{dagger}, \cs{ddagger}) appended after the numbers---write it pre-separated
+the way you want it to read, e.g.\ \texttt{[\cs{dagger},\cs{ddagger}]}. Use
+\texttt{\textasciitilde} inside names to keep them from breaking across lines.
+
+\paragraph{\cs{AddAffilNote}\texttt{\{}\meta{symbol}\texttt{\}\{}\meta{text}\texttt{\}}}
+Register one legend line, typeset as \textsuperscript{\meta{symbol}}\meta{text}. Lines print
+in the order added.
+
+\paragraph{\cs{PrintAuthors}}
+Typeset author names, comma-separated, each with its computed superscript. Sets
+no font size---wrap it yourself, e.g.\ \texttt{\{\cs{small} \cs{PrintAuthors}\}}.
+
+\paragraph{\cs{PrintAffiliations}}
+Typeset the numbered affiliation list, one per line, in first-appearance order.
+Switches to \cs{footnotesize}.
+
+\paragraph{\cs{PrintAffilNotes}}
+Typeset the legend lines, one per line. Switches to \cs{footnotesize}.
+
+\section{Options}
+\begin{description}[leftmargin=2.2cm,style=nextline,font=\ttfamily]
+  \item[\lbrack sort\rbrack] (default) Numbers within a single author are shown
+    ascending: \texttt{1,5,30}, regardless of citation order.
+  \item[\lbrack nosort\rbrack] Numbers within a single author are shown in the
+    order the codes were cited.
+\end{description}
+
+\section{How the numbering works}
+A code receives its number the first time \emph{any} author cites it. So for an
+author who introduces several brand-new affiliations at once, the left-to-right
+order of that author's code list fixes those numbers. To force a particular
+global ordering, control the order of first citation---the simplest lever is the
+first author who uses each code. Everything downstream (the per-author
+superscripts and the printed affiliation list) is derived from that, so there
+are never two places to keep in sync.
+
+\section{Diagnostics}
+The package writes a warning to the log and terminal in two situations:
+\begin{description}[leftmargin=2.6cm,style=nextline,font=\ttfamily]
+  \item[unknown-code] An author cites a code that was never defined with
+    \cs{DefineAffiliation}. A number is still allocated, but no address exists
+    for it.
+  \item[unused-affil] A code was defined but never cited by any author, so it
+    does not appear in the list. Checked once, at \cs{end\{document\}}.
+\end{description}
+Neither is fatal; both are there to catch copy-paste slips before submission.
+
+\section{Tips}
+\begin{itemize}[leftmargin=1.4em]
+  \item The commands are layout-agnostic. Drop \cs{PrintAuthors},
+    \cs{PrintAffiliations}, and \cs{PrintAffilNotes} into whatever
+    \cs{title}/\cs{author} scaffold your journal class expects.
+  \item A trailing \cs{\textbackslash} immediately before \cs{end\{center\}}
+    raises a spurious ``missing \cs{item}'' error in \LaTeX. The print commands
+    therefore use \cs{\textbackslash} as a \emph{separator}, never a terminator,
+    so you can place them safely at the end of a centered block.
+  \item If a legend line uses \cs{href}, load \texttt{hyperref} in your
+    preamble; the package does not load it for you.
+\end{itemize}
+
+\end{document}
