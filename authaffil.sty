@@ -1,123 +1,17 @@
 %% authaffil.sty
 %% =========================================================================
 %%  authaffil --- first-appearance numbering of author affiliations
-%%  Version 1.2  (2026/05/29)
+%%  Version 1.3  (2026/06/09)
 %%
 %%  Author : Ayush Noori
 %%  License : LaTeX Project Public License (LPPL) 1.3c or later
 %% =========================================================================
-%%
-%%  OVERVIEW
-%%  --------
-%%  Define each affiliation once, keyed by a short code (e.g. HMS). Then list
-%%  your authors and tag each with a comma-separated set of codes. Affiliation
-%%  numbers are assigned in the order the codes are FIRST CITED across the
-%%  author list, and the affiliation block is printed in that same order.
-%%  Add, remove, or reorder authors and every number updates automatically --
-%%  you never write a numeral by hand.
-%%
-%%  QUICK START
-%%  -----------
-%%    \usepackage{authaffil}
-%%
-%%    % 1. Define affiliations (order here is irrelevant).
-%%    \DefineAffiliation{HMS}{Dept. of Biomedical Informatics, HMS, Boston, MA, USA}
-%%    \DefineAffiliation{OXE}{Dept. of Engineering Science, Oxford, UK}
-%%
-%%    % 2. List authors, tagging codes (+ optional footnote symbols, ORCID iD).
-%%    \AddAuthor[][0000-0003-1420-1236]{Ayush~Noori}{HMS,OXE}
-%%    \AddAuthor[\dagger,\ddagger][0000-0001-8530-7228]{Marinka~Zitnik}{HMS}
-%%
-%%    % 3. Optional legend lines.
-%%    \AddAffilNote{\dagger}{These authors jointly supervised this work.}
-%%
-%%    % 4. Typeset, e.g. inside \author{...}:
-%%    \author{{\small\begin{center}
-%%        \PrintAuthors        \\[2mm]
-%%        \PrintAffiliations   \\[1mm]
-%%        \PrintAffilNotes
-%%    \end{center}}}
-%%
-%%  COMMAND REFERENCE
-%%  -----------------
-%%    \DefineAffiliation{CODE}{address}
-%%        Register an affiliation. CODE is any short string (3-letter codes
-%%        are convenient but not required). The address may contain \\ for
-%%        forced line breaks. Call this for every affiliation, in any order.
-%%
-%%    \AddAuthor[<symbols>][<orcid>]{Name}{CODE,CODE,...}
-%%        Append one author. The last argument is a comma-separated list of
-%%        affiliation codes; each new code is assigned the next number the
-%%        first time it is seen. The first optional argument is extra
-%%        superscript material (footnote symbols such as * \dagger \ddagger),
-%%        appended after the numbers. The second optional argument is an ORCID
-%%        iD; when given, ~\orcidlink{<orcid>} is appended after the
-%%        superscript (orcidlink is loaded automatically). To supply
-%%        an ORCID without symbols, leave the first bracket empty:
-%%        \AddAuthor[][0000-0003-1420-1236]{Ayush~Noori}{HMS}. Use ~ in names
-%%        to keep them unbroken.
-%%        Example: \AddAuthor[\dagger][0000-0001-8530-7228]{Marinka~Zitnik}{HMS}
-%%
-%%    \AddAffilNote{<symbol>}{text}
-%%        Register one legend line, typeset as $^{<symbol>}$text. Lines are
-%%        printed by \PrintAffilNotes in the order added.
-%%
-%%    \PrintAuthors
-%%        Typeset the author names, comma-separated, each with its computed
-%%        superscript. Does not set a font size; wrap it (e.g. {\small ...}).
-%%
-%%    \PrintAffiliations
-%%        Typeset the numbered affiliation list, one per line (separated by
-%%        \\), in first-appearance order. Switches to \footnotesize.
-%%
-%%    \PrintAffilNotes
-%%        Typeset the legend lines, one per line. Switches to \footnotesize.
-%%
-%%  PACKAGE OPTIONS
-%%  ---------------
-%%    [sort]    (default) numbers within a single author are shown ascending,
-%%              e.g. 1,5,30 regardless of the order codes were cited.
-%%    [nosort]  numbers within a single author are shown in citation order.
-%%
-%%  HOW NUMBERING WORKS
-%%  -------------------
-%%  A code receives its number the first time ANY author cites it. Therefore,
-%%  for an author who introduces several brand-new affiliations at once, the
-%%  left-to-right order of that author's code list fixes those numbers. To
-%%  force a particular global ordering, control the order of first citation
-%%  (the simplest lever is the first author who uses each code).
-%%
-%%  DIAGNOSTICS
-%%  -----------
-%%  The package emits a warning (to the log and terminal) in two cases:
-%%    * unknown-code  : an author cites a CODE that was never defined with
-%%                      \DefineAffiliation. That author's number is still
-%%                      allocated, but no address will exist for it.
-%%    * unused-affil  : a CODE was defined but never cited by any author, so
-%%                      it does not appear in the printed list. Checked once,
-%%                      at \end{document}.
-%%
-%%  REQUIREMENTS
-%%  ------------
-%%  LaTeX2e with the expl3 programming layer (part of every modern TeX
-%%  distribution) and the orcidlink package, which authaffil loads for you so
-%%  the ORCID argument of \AddAuthor works out of the box. orcidlink itself
-%%  pulls in hyperref and tikz. Compatible with pdfLaTeX, XeLaTeX, and
-%%  LuaLaTeX. Because orcidlink loads hyperref, if you need hyperref with
-%%  particular options (e.g. hidelinks) -- or a legend uses \href -- load
-%%  hyperref BEFORE authaffil so that your options take effect.
-%%
-%%  CHANGELOG
-%%  ---------
-%%  v1.2  Add optional ORCID iD argument to \AddAuthor (appends \orcidlink);
-%%        load the orcidlink package as a dependency.
-%%  v1.1  Add unused-affiliation warning; expand documentation.
-%%  v1.0  Initial release.
-%% =========================================================================
+
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{authaffil}[2026/05/29 v1.2 First-appearance affiliation numbering]
+\ProvidesPackage{authaffil}[2026/06/09 v1.3 First-appearance affiliation numbering]
 
 \RequirePackage{expl3}
+\RequirePackage{xparse}
 \RequirePackage{orcidlink}   % \orcidlink for the ORCID argument of \AddAuthor
 
 % ---- option: per-author sorting of the affiliation numbers ---------------
@@ -125,6 +19,7 @@
 \bool_new:N \g_aa_sort_bool
 \bool_gset_true:N \g_aa_sort_bool
 \ExplSyntaxOff
+
 \DeclareOption{nosort}{\ExplSyntaxOn\bool_gset_false:N \g_aa_sort_bool\ExplSyntaxOff}
 \DeclareOption{sort}{\ExplSyntaxOn\bool_gset_true:N \g_aa_sort_bool\ExplSyntaxOff}
 \ProcessOptions\relax
@@ -136,8 +31,8 @@
 \prop_new:N \g_aa_num_prop       % code -> assigned number
 \seq_new:N  \g_aa_order_seq      % codes, in order of first appearance
 \int_new:N  \g_aa_count_int      % running affiliation counter
-\seq_new:N  \g_aa_authors_seq    % fully rendered "Name$^{...}$" entries
-\seq_new:N  \g_aa_notes_seq      % legend lines
+\seq_new:N  \g_aa_authors_seq    % rendered author entries
+\seq_new:N  \g_aa_notes_seq      % affiliation note entries
 
 \msg_new:nnn { authaffil } { unknown-code }
   { Affiliation~code~'#1'~is~cited~by~an~author~but~was~never~defined~with~
@@ -149,35 +44,42 @@
 
 % ---- \DefineAffiliation{CODE}{body} --------------------------------------
 \NewDocumentCommand \DefineAffiliation { m m }
-  { \prop_gput:Nnn \g_aa_body_prop {#1} {#2} }
+  {
+    \prop_gput:Nnn \g_aa_body_prop {#1} {#2}
+  }
 
-% ---- internal: assign a number to a code the first time it is seen -------
+% ---- internal: assign a number to a code the first time it is seen --------
 \cs_new_protected:Npn \aa_ensure_num:n #1
   {
     \prop_if_in:NnF \g_aa_num_prop {#1}
       {
         \prop_if_in:NnF \g_aa_body_prop {#1}
           { \msg_warning:nnn { authaffil } { unknown-code } {#1} }
+
         \int_gincr:N \g_aa_count_int
         \prop_gput:Nnx \g_aa_num_prop {#1} { \int_use:N \g_aa_count_int }
         \seq_gput_right:Nn \g_aa_order_seq {#1}
       }
   }
 
-% ---- internal: build the superscript token list for one author -----------
+% ---- internal: build the superscript token list for one author ------------
 \seq_new:N \l_aa_nums_seq
 \tl_new:N  \l_aa_super_tl
-\cs_new_protected:Npn \aa_build_super:nn #1#2   % #1 = codes, #2 = symbols
+
+\cs_new_protected:Npn \aa_build_super:nn #1#2
   {
     \seq_clear:N \l_aa_nums_seq
+
     \clist_map_inline:nn {#1}
       {
         \tl_if_blank:nF {##1}
           {
             \aa_ensure_num:n {##1}
-            \seq_put_right:Nx \l_aa_nums_seq { \prop_item:Nn \g_aa_num_prop {##1} }
+            \seq_put_right:Nx \l_aa_nums_seq
+              { \prop_item:Nn \g_aa_num_prop {##1} }
           }
       }
+
     \bool_if:NT \g_aa_sort_bool
       {
         \seq_sort:Nn \l_aa_nums_seq
@@ -187,67 +89,122 @@
               { \sort_return_same: }
           }
       }
+
     \tl_set:Nx \l_aa_super_tl { \seq_use:Nn \l_aa_nums_seq { , } }
+
     \tl_if_blank:nF {#2}
       {
-        \tl_if_empty:NF \l_aa_super_tl { \tl_put_right:Nn \l_aa_super_tl { , } }
+        \tl_if_empty:NF \l_aa_super_tl
+          { \tl_put_right:Nn \l_aa_super_tl { , } }
         \tl_put_right:Nn \l_aa_super_tl {#2}
       }
   }
 
 % ---- \AddAuthor[symbols][orcid]{Name}{codes} -----------------------------
-% #1 = footnote symbols, #2 = ORCID iD, #3 = name, #4 = affiliation codes.
+% #1 = footnote symbols
+% #2 = ORCID iD
+% #3 = name
+% #4 = affiliation codes
 \tl_new:N \l_aa_orcid_tl
+
 \NewDocumentCommand \AddAuthor { O{} O{} m m }
   {
     \aa_build_super:nn {#4} {#1}
+
     \tl_clear:N \l_aa_orcid_tl
     \tl_if_blank:nF {#2}
-      { \tl_set:Nn \l_aa_orcid_tl { \nobreakspace \orcidlink {#2} } }
+      {
+        \tl_set:Nn \l_aa_orcid_tl
+          { \nobreakspace \orcidlink {#2} }
+      }
+
     \seq_gput_right:Nx \g_aa_authors_seq
       {
-        \exp_not:n {#3} $^{ \exp_not:V \l_aa_super_tl }$
+        \exp_not:n {#3}
+        $^{ \exp_not:V \l_aa_super_tl }$
         \exp_not:V \l_aa_orcid_tl
       }
   }
 
-% ---- \AddAffilNote{symbol}{text} -----------------------------------------
+% ---- affiliation notes ----------------------------------------------------
+% \AddAffilNote{symbol}{text}
+% If symbol is blank, prints plain text without an empty superscript.
 \NewDocumentCommand \AddAffilNote { m m }
-  { \seq_gput_right:Nn \g_aa_notes_seq { $^{#1}$#2 } }
+  {
+    \seq_gput_right:Nn \g_aa_notes_seq
+      { \aa_note_item:nn {#1} {#2} }
+  }
+
+% \AddAffilNoteSpace[amount]
+% Adds vertical space before the next affiliation note.
+% Default: 1mm.
+\NewDocumentCommand \AddAffilNoteSpace { O{1mm} }
+  {
+    \seq_gput_right:Nn \g_aa_notes_seq
+      { \aa_note_space:n {#1} }
+  }
+
+\tl_new:N   \l_aa_note_sep_tl
+\bool_new:N \l_aa_note_seen_bool
+
+\cs_new_protected:Npn \aa_note_item:nn #1#2
+  {
+    \tl_use:N \l_aa_note_sep_tl
+
+    \tl_if_blank:nTF {#1}
+      { #2 }
+      { $^{#1}$#2 }
+
+    \bool_set_true:N \l_aa_note_seen_bool
+    \tl_set:Nn \l_aa_note_sep_tl { \\ }
+  }
+
+\cs_new_protected:Npn \aa_note_space:n #1
+  {
+    \bool_if:NT \l_aa_note_seen_bool
+      {
+        \tl_set:Nn \l_aa_note_sep_tl { \\[#1] }
+      }
+  }
 
 % ---- printing ------------------------------------------------------------
 \NewDocumentCommand \PrintAuthors { }
-  { \seq_use:Nn \g_aa_authors_seq { ,~ } }
+  {
+    \seq_use:Nn \g_aa_authors_seq { ,~ }
+  }
 
 \bool_new:N \l_aa_first_bool
 
-% \\ is used as a SEPARATOR (not a terminator) so no trailing \\ is emitted
-% before \end{center} -- a trailing \\ there triggers a "missing \item" error.
+% \\ is used as a separator, not a terminator, so no trailing \\ is emitted.
 \NewDocumentCommand \PrintAffiliations { }
   {
     \footnotesize
     \bool_set_true:N \l_aa_first_bool
+
     \seq_map_inline:Nn \g_aa_order_seq
       {
         \bool_if:NTF \l_aa_first_bool
-          { \bool_set_false:N \l_aa_first_bool } { \\ }
-        $^{\prop_item:Nn \g_aa_num_prop {##1}}$\prop_item:Nn \g_aa_body_prop {##1}
+          { \bool_set_false:N \l_aa_first_bool }
+          { \\ }
+
+        $^{\prop_item:Nn \g_aa_num_prop {##1}}$
+        \prop_item:Nn \g_aa_body_prop {##1}
       }
   }
 
 \NewDocumentCommand \PrintAffilNotes { }
   {
     \footnotesize
-    \bool_set_true:N \l_aa_first_bool
+    \tl_clear:N \l_aa_note_sep_tl
+    \bool_set_false:N \l_aa_note_seen_bool
+
     \seq_map_inline:Nn \g_aa_notes_seq
       {
-        \bool_if:NTF \l_aa_first_bool
-          { \bool_set_false:N \l_aa_first_bool } { \\ }
         ##1
       }
   }
 
-% ---- diagnostics: warn about defined-but-never-cited affiliations --------
+% ---- diagnostics: warn about defined-but-never-cited affiliations ---------
 \cs_new_protected:Npn \aa_check_unused:
   {
     \prop_map_inline:Nn \g_aa_body_prop
@@ -256,6 +213,7 @@
           { \msg_warning:nnn { authaffil } { unused-affil } {##1} }
       }
   }
+
 \AtEndDocument{ \aa_check_unused: }
 
 \ExplSyntaxOff
