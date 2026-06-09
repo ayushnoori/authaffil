@@ -1,30 +1,41 @@
 %% authaffil.sty
 %% =========================================================================
 %%  authaffil --- first-appearance numbering of author affiliations
-%%  Version 1.3  (2026/06/09)
+%%  Version 1.4  (2026/06/09)
 %%
 %%  Author : Ayush Noori
 %%  License : LaTeX Project Public License (LPPL) 1.3c or later
 %% =========================================================================
 
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{authaffil}[2026/06/09 v1.3 First-appearance affiliation numbering]
+\ProvidesPackage{authaffil}[2026/06/09 v1.4 First-appearance affiliation numbering]
 
 \RequirePackage{expl3}
 \RequirePackage{xparse}
 \RequirePackage{orcidlink}   % \orcidlink for the ORCID argument of \AddAuthor
 
-% ---- option: per-author sorting of the affiliation numbers ---------------
 \ExplSyntaxOn
+
+% ---- options -------------------------------------------------------------
 \bool_new:N \g_aa_sort_bool
 \bool_gset_true:N \g_aa_sort_bool
-\ExplSyntaxOff
 
-\DeclareOption{nosort}{\ExplSyntaxOn\bool_gset_false:N \g_aa_sort_bool\ExplSyntaxOff}
-\DeclareOption{sort}{\ExplSyntaxOn\bool_gset_true:N \g_aa_sort_bool\ExplSyntaxOff}
-\ProcessOptions\relax
+\tl_new:N \g_aa_affil_sep_tl
+\tl_gset:Nn \g_aa_affil_sep_tl { \\ } % default: one affiliation per line
 
-\ExplSyntaxOn
+\DeclareOption { nosort }
+  { \bool_gset_false:N \g_aa_sort_bool }
+
+\DeclareOption { sort }
+  { \bool_gset_true:N \g_aa_sort_bool }
+
+\DeclareOption { affilnewline }
+  { \tl_gset:Nn \g_aa_affil_sep_tl { \\ } }
+
+\DeclareOption { affilsemicolon }
+  { \tl_gset:Nn \g_aa_affil_sep_tl { ;~ } }
+
+\ProcessOptions \relax
 
 % ---- storage -------------------------------------------------------------
 \prop_new:N \g_aa_body_prop      % code -> affiliation address text
@@ -46,6 +57,14 @@
 \NewDocumentCommand \DefineAffiliation { m m }
   {
     \prop_gput:Nnn \g_aa_body_prop {#1} {#2}
+  }
+
+% ---- optional custom separator ------------------------------------------
+% Example: \SetAffiliationSeparator{; }
+% Example: \SetAffiliationSeparator{\quad}
+\NewDocumentCommand \SetAffiliationSeparator { m }
+  {
+    \tl_gset:Nn \g_aa_affil_sep_tl {#1}
   }
 
 % ---- internal: assign a number to a code the first time it is seen --------
@@ -175,7 +194,9 @@
 
 \bool_new:N \l_aa_first_bool
 
-% \\ is used as a separator, not a terminator, so no trailing \\ is emitted.
+% Separator is controlled by package option:
+%   default / affilnewline  -> line breaks
+%   affilsemicolon          -> semicolon-separated inline list
 \NewDocumentCommand \PrintAffiliations { }
   {
     \footnotesize
@@ -185,7 +206,7 @@
       {
         \bool_if:NTF \l_aa_first_bool
           { \bool_set_false:N \l_aa_first_bool }
-          { \\ }
+          { \tl_use:N \g_aa_affil_sep_tl }
 
         $^{\prop_item:Nn \g_aa_num_prop {##1}}$
         \prop_item:Nn \g_aa_body_prop {##1}
@@ -214,7 +235,7 @@
       }
   }
 
-\AtEndDocument{ \aa_check_unused: }
+\AtEndDocument { \aa_check_unused: }
 
 \ExplSyntaxOff
 \endinput
